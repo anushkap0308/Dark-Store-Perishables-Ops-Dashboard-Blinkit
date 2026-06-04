@@ -69,7 +69,7 @@ html, body, [class*="css"] {
 [data-testid="stSidebar"] .stSelectbox label,
 [data-testid="stSidebar"] .stSlider label {
     color: #7fa8d8 !important;
-    font-size: 0.78rem !important;
+    font-size: 1rem !important;
     text-transform: uppercase !important;
     letter-spacing: 0.08em !important;
 }
@@ -89,19 +89,19 @@ html, body, [class*="css"] {
 }
 [data-testid="metric-container"] [data-testid="stMetricLabel"] {
     color: #7fa8d8 !important;
-    font-size: 0.73rem !important;
+    font-size: 0.95rem !important;
     font-weight: 600 !important;
     text-transform: uppercase !important;
     letter-spacing: 0.1em !important;
 }
 [data-testid="metric-container"] [data-testid="stMetricValue"] {
     color: #e8f4ff !important;
-    font-size: 1.6rem !important;
+    font-size: 2rem !important;
     font-weight: 700 !important;
     font-family: 'JetBrains Mono', monospace !important;
 }
 [data-testid="metric-container"] [data-testid="stMetricDelta"] {
-    font-size: 0.75rem !important;
+    font-size: 0.95rem !important;
 }
 
 /* Section headers */
@@ -176,7 +176,7 @@ hr {
     border: 1px solid rgba(0,196,154,0.25) !important;
     border-radius: 8px !important;
     font-family: 'JetBrains Mono', monospace !important;
-    font-size: 0.83rem !important;
+    font-size: 1rem !important;
 }
 
 /* Selectbox */
@@ -190,7 +190,7 @@ hr {
 /* Caption */
 .stCaption {
     color: #4a6080 !important;
-    font-size: 0.73rem !important;
+    font-size: 0.9rem !important;
 }
 
 /* Banner hero */
@@ -220,7 +220,7 @@ hr {
     padding: 0.8rem 1.2rem;
     margin: 0.5rem 0 1rem 0;
     color: #9ec8b4 !important;
-    font-size: 0.85rem;
+    font-size: 1rem;
     line-height: 1.6;
 }
 
@@ -272,6 +272,10 @@ date_min = df_daily["date"].min().date()
 date_max = df_daily["date"].max().date()
 date_range = st.sidebar.date_input("Date Range", value=(date_min, date_max),
                                     min_value=date_min, max_value=date_max)
+
+if len(date_range) != 2:
+    st.info("Please select both a start and end date to continue.")
+    st.stop()
 
 st.sidebar.markdown("---")
 st.sidebar.markdown('<div style="font-size:0.72rem; color:#7fa8d8; letter-spacing:0.1em; text-transform:uppercase; font-weight:700; margin-bottom:8px;">⚙️ Alert Thresholds</div>', unsafe_allow_html=True)
@@ -543,10 +547,11 @@ st.markdown('<div class="story-label">🔍 Chapter 4 — Dig deeper with SQL</di
 st.markdown("#### 🔍 SQL Explorer — Run Your Own Queries")
 
 PRESET_QUERIES = {
+    
     "Top 5 highest wastage SKUs":
         "SELECT sku_name, category, wastage_pct, wastage_value_rs FROM v_wastage_summary ORDER BY wastage_value_rs DESC LIMIT 5",
     "Fill rate below threshold by vendor":
-        f"SELECT vendor, category, avg_fill_rate_pct, total_stockout_units FROM v_vendor_performance WHERE avg_fill_rate_pct < {fill_thresh} ORDER BY avg_fill_rate_pct ASC",
+        f"SELECT vendor, category, avg_fill_rate_pct, total_stockouts FROM v_vendor_performance WHERE avg_fill_rate_pct < {fill_thresh} ORDER BY avg_fill_rate_pct ASC",
     "Vendor lead time ranking":
         "SELECT vendor, category, avg_lead_days, max_lead_days, total_stockouts FROM v_vendor_performance ORDER BY avg_lead_days DESC",
     "Daily stockouts last 7 days":
@@ -558,14 +563,16 @@ PRESET_QUERIES = {
 
 preset = st.selectbox("Preset queries", list(PRESET_QUERIES.keys()))
 sql_input = st.text_area("SQL", value=PRESET_QUERIES[preset], height=80)
-
 if st.button("▶ Run Query", type="primary"):
-    try:
-        result = query(sql_input)
-        st.dataframe(result, use_container_width=True)
-        st.caption(f"Returned {len(result)} rows")
-    except Exception as e:
-        st.error(f"Query error: {e}")
+    if not sql_input.strip():
+        st.warning("Please enter a SQL query to run.")
+    else:
+        try:
+            result = query(sql_input)
+            st.dataframe(result, use_container_width=True)
+            st.caption(f"Returned {len(result)} rows")
+        except Exception as e:
+            st.error(f"Query error: {e}")
 
 st.markdown("---")
 
@@ -635,3 +642,4 @@ st.markdown("""
   <p style="color:#2a4060; font-size:0.73rem; margin:0;">🥬 Perishables Ops · Gurgaon</p>
 </div>
 """, unsafe_allow_html=True)
+
